@@ -1,0 +1,956 @@
+/* ============================================
+   Pokemon-Themed Wedding Invitation
+   ============================================ */
+
+.app-wrapper {
+  width: 100%;
+  min-height: 100vh;
+}
+
+/* ============================================
+   POKEBALL OPENING SCREEN
+   ============================================ */
+.pokeball-screen {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(160deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+  z-index: 100;
+  overflow: hidden;
+}
+
+.pokeball-screen.idle {
+  cursor: default;
+}
+
+/* 背景浮动小精灵球 */
+.bg-pokeballs {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+
+.bg-pokeball {
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 55%, #fff 40%, #333 42%, #333 44%, #EE1515 46%, #EE1515 100%);
+  opacity: 0.08;
+  animation: float-bg 8s infinite ease-in-out;
+  animation-delay: calc(var(--i) * -1.3s);
+}
+
+.bg-pokeball:nth-child(1) { top: 10%; left: 10%; width: 20px; height: 20px; }
+.bg-pokeball:nth-child(2) { top: 25%; right: 15%; width: 35px; height: 35px; }
+.bg-pokeball:nth-child(3) { top: 60%; left: 5%; width: 25px; height: 25px; }
+.bg-pokeball:nth-child(4) { top: 75%; right: 10%; width: 18px; height: 18px; }
+.bg-pokeball:nth-child(5) { top: 40%; left: 80%; width: 28px; height: 28px; }
+.bg-pokeball:nth-child(6) { top: 85%; left: 40%; width: 22px; height: 22px; }
+
+@keyframes float-bg {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-20px) rotate(180deg); }
+}
+
+/* 精灵球容器 */
+.pokeball-container {
+  position: relative;
+  width: 180px;
+  height: 180px;
+}
+
+/* 精灵球 SVG */
+.pokeball-svg {
+  width: 100%;
+  height: 100%;
+  filter: drop-shadow(0 0 20px rgba(238, 21, 21, 0.3));
+  transition: filter 0.3s;
+}
+
+.pokeball-screen.idle .pokeball-svg {
+  animation: pokeball-idle 2s ease-in-out infinite;
+}
+
+@keyframes pokeball-idle {
+  0%, 100% { transform: rotate(-3deg); }
+  50% { transform: rotate(3deg); }
+}
+
+/* 精灵球按钮 hover */
+.pokeball-button {
+  transition: fill 0.2s;
+}
+
+.pokeball-screen.idle:hover .pokeball-button {
+  fill: #EE1515;
+}
+
+/* 精灵球打开动画 */
+.pokeball-screen.opening .pokeball-svg,
+.pokeball-screen.flash .pokeball-svg {
+  animation: none;
+}
+
+.pokeball-screen.opening .pokeball-top,
+.pokeball-screen.flash .pokeball-top {
+  animation: open-top 0.6s ease-out forwards;
+}
+
+.pokeball-screen.opening .pokeball-bottom,
+.pokeball-screen.flash .pokeball-bottom {
+  animation: open-bottom 0.6s ease-out forwards;
+}
+
+@keyframes open-top {
+  0% { transform: translateY(0) rotate(0); }
+  60% { transform: translateY(-30px) rotate(-8deg); }
+  100% { transform: translateY(-50px) rotate(-12deg); opacity: 0.6; }
+}
+
+@keyframes open-bottom {
+  0% { transform: translateY(0) rotate(0); }
+  60% { transform: translateY(30px) rotate(5deg); }
+  100% { transform: translateY(50px) rotate(8deg); opacity: 0.6; }
+}
+
+/* 提示文字 + 密码解锁区域 */
+.pokeball-unlock {
+  position: absolute;
+  bottom: 14%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 280px;
+  padding: 0 20px;
+  text-align: center;
+}
+
+.pokeball-hint {
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.hint-text {
+  font-family: 'ZCOOL KuaiLe', 'Noto Serif SC', serif;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 14px;
+  letter-spacing: 2px;
+}
+
+.hint-bounce {
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 18px;
+  margin-top: 8px;
+  animation: bounce-hint 1.5s ease-in-out infinite;
+}
+
+@keyframes bounce-hint {
+  0%, 100% { transform: translateY(0); opacity: 0.4; }
+  50% { transform: translateY(8px); opacity: 0.8; }
+}
+
+/* 密码表单 */
+.unlock-form {
+  margin-top: 4px;
+}
+
+.unlock-input-wrap {
+  display: flex;
+  align-items: stretch;
+  gap: 0;
+  border-radius: 28px;
+  overflow: hidden;
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.25),
+    0 0 0 2px rgba(238, 21, 21, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(8px);
+}
+
+.unlock-input {
+  flex: 1;
+  min-width: 0;
+  height: 48px;
+  padding: 0 20px;
+  font-family: 'ZCOOL KuaiLe', 'Noto Serif SC', serif;
+  font-size: 15px;
+  color: #fff;
+  background: transparent;
+  border: none;
+  outline: none;
+  letter-spacing: 1px;
+}
+
+.unlock-input::placeholder {
+  color: rgba(255, 255, 255, 0.45);
+}
+
+.unlock-btn {
+  height: 48px;
+  padding: 0 24px;
+  font-family: 'Fredoka', 'ZCOOL KuaiLe', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: #fff;
+  background: linear-gradient(180deg, #EE1515 0%, #c41111 100%);
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.15s;
+  letter-spacing: 2px;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+.unlock-btn:hover {
+  transform: scale(1.02);
+  box-shadow: 0 0 16px rgba(238, 21, 21, 0.5);
+}
+
+.unlock-btn:active {
+  transform: scale(0.98);
+}
+
+.unlock-error {
+  margin-top: 12px;
+  font-family: 'ZCOOL KuaiLe', 'Noto Serif SC', serif;
+  font-size: 13px;
+  color: #ff6b6b;
+  text-shadow: 0 0 8px rgba(255, 107, 107, 0.4);
+  animation: unlock-error-shake 0.4s ease-out;
+}
+
+@keyframes unlock-error-shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-6px); }
+  40% { transform: translateX(6px); }
+  60% { transform: translateX(-4px); }
+  80% { transform: translateX(4px); }
+}
+
+/* ============================================
+   SPARKLES (粒子特效)
+   ============================================ */
+.sparkles {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+}
+
+.sparkle {
+  position: absolute;
+  width: var(--size);
+  height: var(--size);
+  background: #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 6px 2px rgba(255, 255, 255, 0.8), 0 0 12px 4px rgba(238, 21, 21, 0.4);
+  animation: sparkle-burst 0.8s ease-out forwards;
+  animation-delay: var(--delay);
+  opacity: 0;
+}
+
+@keyframes sparkle-burst {
+  0% {
+    transform: translate(0, 0) scale(0);
+    opacity: 1;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate(
+      calc(cos(var(--angle)) * var(--distance)),
+      calc(sin(var(--angle)) * var(--distance))
+    ) scale(1);
+    opacity: 0;
+  }
+}
+
+/* ============================================
+   FLASH OVERLAY (白光闪屏)
+   ============================================ */
+.flash-overlay {
+  position: fixed;
+  inset: 0;
+  background: white;
+  z-index: 200;
+  animation: flash-anim 1s ease-out forwards;
+}
+
+@keyframes flash-anim {
+  0% { opacity: 0; }
+  20% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* ============================================
+   INVITATION - POKEMON THEME
+   ============================================ */
+.invitation.pokemon-theme {
+  background: linear-gradient(180deg, #fef9f0 0%, #fff5f5 30%, #fef9f0 60%, #fff5f5 100%);
+  min-height: 100vh;
+  padding-bottom: 0;
+  position: relative;
+  overflow: hidden;
+  border: 3px solid #F4A0C0;
+  box-sizing: border-box;
+}
+
+/* 入场动画 */
+.fade-in {
+  animation: invitation-enter 0.8s ease-out;
+}
+
+@keyframes invitation-enter {
+  0% { opacity: 0; transform: translateY(30px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+/* ============================================
+   樱花飘落
+   ============================================ */
+.sakura-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  overflow: hidden;
+}
+
+.sakura-petal {
+  position: absolute;
+  top: -20px;
+  left: var(--x);
+  width: 12px;
+  height: 12px;
+  background: radial-gradient(ellipse 60% 70% at 50% 50%, #FFB7C5, #F4A0C0);
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(0deg);
+  opacity: 0.85;
+  animation: sakura-fall var(--duration) var(--delay) linear infinite;
+}
+
+@keyframes sakura-fall {
+  0% {
+    transform: translateY(0) translateX(0) rotate(0deg);
+    opacity: 0.85;
+  }
+  15% {
+    transform: translateY(15vh) translateX(var(--sway)) rotate(90deg);
+  }
+  30% {
+    transform: translateY(30vh) translateX(calc(-1 * var(--sway))) rotate(180deg);
+  }
+  50% {
+    transform: translateY(50vh) translateX(var(--sway)) rotate(270deg);
+  }
+  70% {
+    transform: translateY(70vh) translateX(calc(-0.5 * var(--sway))) rotate(360deg);
+  }
+  100% {
+    transform: translateY(100vh) translateX(0) rotate(450deg);
+    opacity: 0.6;
+  }
+}
+
+/* ---- Header ---- */
+.header {
+  padding: 28px 30px 0;
+  position: relative;
+}
+
+.header-badge {
+  position: absolute;
+  top: 20px;
+  right: 25px;
+}
+
+.mini-pokeball {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #EE1515 49%, #333 49%, #333 51%, #fff 51%);
+  border: 2px solid #333;
+  position: relative;
+}
+
+.mini-pokeball::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid #333;
+}
+
+.header-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 18px;
+  color: #EE1515;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+
+.header-subtitle {
+  font-family: 'ZCOOL KuaiLe', 'Noto Serif SC', serif;
+  font-size: 13px;
+  color: #999;
+  margin-top: 2px;
+  font-weight: 400;
+}
+
+.header-hi {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 52px;
+  color: #EE1515;
+  text-align: right;
+  margin-top: -20px;
+  padding-right: 20px;
+  font-weight: 700;
+}
+
+/* ---- Photo Section ---- */
+.photo-section {
+  padding: 0 35px;
+  margin-top: 10px;
+}
+
+.photo-frame {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 3px solid #EE1515;
+  box-shadow:
+    0 4px 20px rgba(238, 21, 21, 0.1),
+    inset 0 0 0 2px #fff;
+  position: relative;
+}
+
+.photo-frame img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* ---- Welcome Section ---- */
+.welcome-section {
+  position: relative;
+  text-align: center;
+  padding: 35px 30px;
+}
+
+.welcome-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 26px;
+  color: #EE1515;
+  margin-bottom: 25px;
+  font-weight: 600;
+}
+
+.welcome-text {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px;
+  color: #555;
+  line-height: 2.2;
+  font-weight: 400;
+}
+
+.couple-names {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  margin-top: 25px;
+  font-family: 'ZCOOL KuaiLe', 'Noto Serif SC', serif;
+  font-size: 17px;
+  color: #444;
+  font-weight: 400;
+}
+
+.heart-icon {
+  display: flex;
+  align-items: center;
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+}
+
+/* ---- Divider with mini pokeball ---- */
+.section-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 30px;
+  gap: 0;
+}
+
+.section-divider::before,
+.section-divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(to right, transparent, #e0c8c8, transparent);
+}
+
+.divider-pokeball {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #EE1515 49%, #555 49%, #555 51%, #fff 51%);
+  border: 1.5px solid #555;
+  margin: 0 12px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.divider-pokeball::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #555;
+}
+
+/* ---- Info Sections ---- */
+.info-section {
+  text-align: center;
+  padding: 30px 30px;
+}
+
+.section-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 24px;
+  color: #EE1515;
+  margin-bottom: 16px;
+  font-weight: 600;
+}
+
+.info-text {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 15px;
+  color: #666;
+  line-height: 1.8;
+  font-weight: 300;
+}
+
+.info-text .lunar {
+  font-size: 13px;
+  color: #999;
+}
+
+.info-venue {
+  font-family: 'ZCOOL KuaiLe', 'Noto Serif SC', serif;
+  font-size: 18px;
+  color: #1a1a1a;
+  margin-top: 4px;
+  margin-bottom: 10px;
+  font-weight: 600;
+}
+
+.info-section .info-text {
+  margin-top: 0;
+}
+
+.map-wrap {
+  display: block;
+  margin-top: 16px;
+  width: 100%;
+  max-width: 340px;
+  margin-left: auto;
+  margin-right: auto;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 2px solid rgba(238, 21, 21, 0.25);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.map-wrap:hover {
+  border-color: rgba(238, 21, 21, 0.5);
+  box-shadow: 0 4px 16px rgba(238, 21, 21, 0.15);
+}
+
+.map-img {
+  display: block;
+  width: 100%;
+  height: auto;
+  vertical-align: top;
+}
+
+.map-open-baidu {
+  display: block;
+  padding: 10px 16px;
+  font-family: 'ZCOOL KuaiLe', 'Noto Serif SC', serif;
+  font-size: 13px;
+  color: #EE1515;
+  text-align: center;
+  background: rgba(238, 21, 21, 0.06);
+  transition: background 0.2s;
+}
+
+.map-wrap:hover .map-open-baidu {
+  background: rgba(238, 21, 21, 0.12);
+}
+
+/* ---- Process Section ---- */
+.process-section {
+  text-align: center;
+  padding: 30px 30px;
+}
+
+.process-timeline {
+  margin-top: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.timeline-item {
+  display: flex;
+  align-items: center;
+  padding: 14px 0;
+  gap: 12px;
+}
+
+.timeline-pokeball-dot {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #EE1515 49%, #444 49%, #444 51%, #fff 51%);
+  border: 2px solid #444;
+  flex-shrink: 0;
+  position: relative;
+}
+
+.timeline-pokeball-dot::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #444;
+}
+
+.timeline-line {
+  flex: 1;
+  display: flex;
+  align-items: center;
+}
+
+.timeline-dots {
+  flex: 1;
+  border-bottom: 2px dashed #e0c8c8;
+}
+
+.timeline-label {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px;
+  color: #555;
+  white-space: nowrap;
+  font-weight: 400;
+}
+
+.timeline-time {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 14px;
+  color: #999;
+  white-space: nowrap;
+  min-width: 44px;
+  text-align: right;
+  font-weight: 300;
+}
+
+/* ---- Tips Section ---- */
+.tips-section {
+  position: relative;
+  padding: 30px 30px;
+}
+
+.tips-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 24px;
+  color: #EE1515;
+  margin-bottom: 16px;
+}
+
+.tips-list {
+  list-style: none;
+  padding: 0;
+}
+
+.tips-list li {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13px;
+  color: #777;
+  line-height: 2;
+  padding-left: 8px;
+  font-weight: 300;
+}
+
+/* ---- 游戏说明（最后一个模块）---- */
+.game-section {
+  padding: 28px 30px 20px;
+  text-align: center;
+}
+
+.game-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 20px;
+  color: #EE1515;
+  margin-bottom: 14px;
+  font-weight: 600;
+}
+
+.game-desc {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 13px;
+  color: #666;
+  line-height: 2;
+  font-weight: 400;
+}
+
+/* ---- Footer ---- */
+.footer {
+  position: relative;
+  text-align: center;
+  padding: 40px 30px 0;
+}
+
+.footer-pokeballs {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.footer-mini-pokeball {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: linear-gradient(180deg, #EE1515 49%, #555 49%, #555 51%, #fff 51%);
+  border: 1.5px solid #555;
+  opacity: 0.5;
+  position: relative;
+}
+
+.footer-mini-pokeball::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 4px;
+  height: 4px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1px solid #555;
+}
+
+.footer-blessing {
+  font-family: 'Ma Shan Zheng', cursive;
+  font-size: 18px;
+  color: #aa7777;
+  line-height: 2;
+  margin-bottom: 20px;
+}
+
+.footer-initials {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 22px;
+  color: #EE1515;
+  letter-spacing: 3px;
+  margin-bottom: 10px;
+}
+
+/* ============================================
+   Hidden Pokémon Easter Eggs (隐藏款)
+   ============================================ */
+.hidden-egg {
+  position: absolute;
+  width: 68px;
+  height: 68px;
+  padding: 0;
+  border: none;
+  background: none;
+  cursor: pointer;
+  opacity: 0.58;
+  transition: transform 0.2s, opacity 0.2s;
+  z-index: 5;
+}
+
+.hidden-egg:hover {
+  opacity: 0.88;
+  transform: scale(1.12);
+}
+
+.hidden-egg.found {
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(0);
+}
+
+.hidden-egg-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  filter: brightness(0.88) contrast(1.05);
+  /* 无边框、无背景，只显示皮卡丘轮廓 */
+  background: none;
+  border: none;
+  vertical-align: middle;
+}
+
+/* ============================================
+   Gift Modal (数字伴手礼卡片) + 皮卡丘撒花
+   ============================================ */
+.gift-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  animation: overlay-in 0.3s ease-out;
+}
+
+@keyframes overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.gift-modal {
+  background: linear-gradient(160deg, #fef9f0 0%, #fff8e7 50%, #fff5f5 100%);
+  border: 3px solid #EE1515;
+  border-radius: 20px;
+  padding: 28px 24px;
+  max-width: 340px;
+  width: 100%;
+  box-shadow: 0 10px 40px rgba(238, 21, 21, 0.25);
+  position: relative;
+  z-index: 502;
+  animation: modal-pop 0.4s ease-out;
+}
+
+@keyframes modal-pop {
+  from { opacity: 0; transform: scale(0.85) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.gift-modal-title {
+  font-family: 'Fredoka', sans-serif;
+  font-size: 20px;
+  color: #EE1515;
+  text-align: center;
+  margin-bottom: 8px;
+}
+
+.gift-modal-subtitle {
+  font-family: 'ZCOOL KuaiLe', 'Noto Serif SC', serif;
+  font-size: 14px;
+  color: #666;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.gift-modal-address {
+  font-family: 'Noto Serif SC', serif;
+  font-size: 15px;
+  color: #333;
+  line-height: 1.8;
+  text-align: center;
+  padding: 16px;
+  background: rgba(238, 21, 21, 0.06);
+  border-radius: 12px;
+  margin-bottom: 20px;
+}
+
+.gift-modal-close {
+  font-family: 'ZCOOL KuaiLe', 'Noto Serif SC', serif;
+  display: block;
+  width: 100%;
+  padding: 12px;
+  background: #EE1515;
+  color: #fff;
+  border: none;
+  border-radius: 12px;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+/* 皮卡丘撒花粒子层 */
+.confetti-layer {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 501;
+}
+
+.confetti-piece {
+  position: absolute;
+  width: 10px;
+  height: 10px;
+  left: 50%;
+  top: 40%;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  animation: confetti-fly 1.2s ease-out forwards;
+}
+
+.confetti-piece.yellow { background: #F5D000; box-shadow: 0 0 6px #F5D000; }
+.confetti-piece.red { background: #EE1515; box-shadow: 0 0 6px #EE1515; }
+.confetti-piece.orange { background: #FF8C00; }
+
+@keyframes confetti-fly {
+  0% {
+    transform: translate(-50%, -50%) translate(0, 0) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(-50%, -50%) translate(var(--tx), var(--ty)) scale(0);
+    opacity: 0;
+  }
+}
+
+/* ---- Responsive ---- */
+@media (max-width: 360px) {
+  .header-hi {
+    font-size: 42px;
+  }
+  .welcome-title {
+    font-size: 22px;
+  }
+  .section-title {
+    font-size: 20px;
+  }
+  .pokeball-container {
+    width: 150px;
+    height: 150px;
+  }
+}
