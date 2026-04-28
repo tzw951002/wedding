@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useMemo, useCallback } from 'react'
 import { useLocation } from 'react-router-dom'
 import html2canvas from 'html2canvas'
 import './App.css'
@@ -6,6 +6,7 @@ import weddingPhoto from './assets/wedding.jpg'
 import pikaImg from './assets/pika_no_bg.png'
 import mapImg from './assets/map.png'
 import backMp3 from './assets/back.mp3'
+import lotteryNamesRaw from './lottery-names.md?raw'
 
 /* ============================================
    Wedding Invitation Data (中文)
@@ -219,10 +220,206 @@ function Sparkles() {
    Main App
    ============================================ */
 const UNLOCK_PASSWORD = '20260503'
+const LOTTERY_PASSWORD = '8021'
+const LOTTERY_UNLOCK_KEY = 'weddingLotteryUnlockedAt'
 
-function App() {
-  const location = useLocation()
-  const isJp = location.pathname === '/jp' || location.pathname === '/jp/'
+function isLotteryUnlocked() {
+  const unlockedAt = Number(window.localStorage.getItem(LOTTERY_UNLOCK_KEY))
+  return Number.isFinite(unlockedAt) && Date.now() - unlockedAt < 1000 * 60 * 60 * 6
+}
+
+function unlockLottery() {
+  window.localStorage.setItem(LOTTERY_UNLOCK_KEY, String(Date.now()))
+}
+
+function parseLotteryNames(raw) {
+  return raw
+    .split(/\r?\n/)
+    .map((line) => line.replace(/^[-*]\s*/, '').trim())
+    .filter((line) => line && !line.startsWith('#'))
+}
+
+function LotteryPage() {
+  const names = useMemo(() => parseLotteryNames(lotteryNamesRaw), [])
+  const prizeRounds = useMemo(() => {
+    const thirdPrizePool = names.slice(2)
+    const thirdPrizeName = thirdPrizePool.length > 0
+      ? thirdPrizePool[Math.floor(Math.random() * thirdPrizePool.length)]
+      : names[0]
+
+    return [
+      { label: '三等奖', name: thirdPrizeName },
+      { label: '二等奖', name: names[1] },
+      { label: '一等奖', name: names[0] },
+    ].filter((round) => round.name)
+  }, [names])
+
+  const [currentIndex, setCurrentIndex] = useState(0)
+  const [isRolling, setIsRolling] = useState(true)
+  const [roundIndex, setRoundIndex] = useState(0)
+  const [selectedName, setSelectedName] = useState('')
+  const [isAuthorized, setIsAuthorized] = useState(() => isLotteryUnlocked())
+  const [lotteryPasswordInput, setLotteryPasswordInput] = useState('')
+  const [lotteryPasswordError, setLotteryPasswordError] = useState('')
+  const currentRound = prizeRounds[roundIndex] ?? { label: '抽奖', name: names[0] }
+  const currentName = selectedName || names[currentIndex] || '等待名单'
+
+  useEffect(() => {
+    document.documentElement.lang = 'zh-CN'
+    document.title = '现场幸运抽奖 | Wedding Live Draw'
+  }, [])
+
+  useEffect(() => {
+    if (!isRolling || names.length === 0) return undefined
+
+    const timer = window.setInterval(() => {
+      setCurrentIndex((index) => (index + 1) % names.length)
+    }, 70)
+
+    return () => window.clearInterval(timer)
+  }, [isRolling, names.length])
+
+  const handleLotteryControl = useCallback(() => {
+    if (prizeRounds.length === 0) return
+
+    if (isRolling) {
+      const targetName = currentRound.name
+      const targetIndex = names.indexOf(targetName)
+      if (targetIndex >= 0) {
+        setCurrentIndex(targetIndex)
+      }
+      setSelectedName(targetName)
+      setIsRolling(false)
+      return
+    }
+
+    if (roundIndex >= prizeRounds.length - 1) {
+      setRoundIndex(0)
+    } else {
+      setRoundIndex((index) => index + 1)
+    }
+    setSelectedName('')
+    setIsRolling(true)
+  }, [currentRound.name, isRolling, names, prizeRounds.length, roundIndex])
+
+  useEffect(() => {
+    if (!isAuthorized) return undefined
+
+    const handleKeyDown = (event) => {
+      const targetTag = event.target?.tagName
+      if (targetTag === 'INPUT' || targetTag === 'TEXTAREA') return
+      if (event.key !== ' ' && event.key !== 'Enter') return
+      event.preventDefault()
+      handleLotteryControl()
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [handleLotteryControl, isAuthorized])
+
+  const handleCloseLottery = () => {
+    window.close()
+    window.setTimeout(() => {
+      if (!window.closed) {
+        window.alert('如果浏览器没有自动关闭，请直接关闭这个抽奖窗口。')
+      }
+    }, 120)
+  }
+
+  const handleLotteryPasswordSubmit = (event) => {
+    event.preventDefault()
+    if (lotteryPasswordInput.trim() !== LOTTERY_PASSWORD) {
+      setLotteryPasswordError('密码错误，请重试。')
+      return
+    }
+
+    unlockLottery()
+    setIsAuthorized(true)
+    setLotteryPasswordError('')
+  }
+
+  return (
+    <div className="lottery-page">
+      <div className="lottery-bg-pokeballs" aria-hidden>
+        {Array.from({ length: 12 }, (_, i) => (
+          <div
+            key={i}
+            className="lottery-bg-pokeball"
+            style={{ '--i': i, '--x': `${(i * 17) % 96}%`, '--y': `${(i * 29) % 92}%` }}
+          />
+        ))}
+      </div>
+
+      <button type="button" className="lottery-back-link" onClick={handleCloseLottery}>
+        关闭抽奖窗口
+      </button>
+
+      {!isAuthorized ? (
+        <main className="lottery-panel lottery-password-panel">
+          <div className="lottery-kicker">Wedding Live Draw</div>
+          <h1 className="lottery-title">现场抽奖入口</h1>
+          <p className="lottery-subtitle">请输入密码开启抽奖页面</p>
+          <form className="lottery-password-form" onSubmit={handleLotteryPasswordSubmit}>
+            <input
+              type="password"
+              className="lottery-password-input"
+              value={lotteryPasswordInput}
+              onChange={(event) => {
+                setLotteryPasswordInput(event.target.value)
+                setLotteryPasswordError('')
+              }}
+              placeholder="请输入密码"
+              autoFocus
+            />
+            <button type="submit" className="lottery-password-button">
+              开启抽奖
+            </button>
+          </form>
+          {lotteryPasswordError && (
+            <div className="lottery-password-error">{lotteryPasswordError}</div>
+          )}
+        </main>
+      ) : (
+      <main className="lottery-panel">
+        <div className="lottery-kicker">Wedding Live Draw</div>
+        <h1 className="lottery-title">现场幸运抽奖</h1>
+        <p className="lottery-subtitle">依次抽出三等奖、二等奖、一等奖</p>
+        <div className="lottery-prize">{currentRound.label}</div>
+
+        <div className={`lottery-stage ${isRolling ? 'is-rolling' : 'is-paused'}`}>
+          <div className="lottery-pika-card">
+            <img src={pikaImg} alt="" className="lottery-pika" />
+          </div>
+          <div className="lottery-name-window">
+            <div className="lottery-name">{currentName}</div>
+          </div>
+          {!isRolling && (
+            <div className="lottery-winner">
+              {currentRound.label}：{currentName}
+            </div>
+          )}
+        </div>
+
+        <button
+          type="button"
+          className={`lottery-control ${isRolling ? '' : 'is-paused'}`}
+          onClick={handleLotteryControl}
+        >
+          {isRolling
+            ? `暂停！抽出${currentRound.label}`
+            : roundIndex >= prizeRounds.length - 1
+              ? '重新开始抽奖'
+              : `开始${prizeRounds[roundIndex + 1]?.label ?? '下一轮'}`}
+        </button>
+
+        <div className="lottery-tip">也可以按空格键或 Enter 键暂停/继续</div>
+      </main>
+      )}
+    </div>
+  )
+}
+
+function InvitationPage({ isJp }) {
   const w = isJp ? WEDDING_JP : WEDDING
   const t = isJp ? TEXTS_JP : TEXTS
 
@@ -245,6 +442,20 @@ function App() {
       handleOpen()
     } else {
       setPasswordError(t.unlockError)
+    }
+  }
+
+  const handleLotteryEntryClick = () => {
+    const value = window.prompt('请输入现场抽奖密码')
+    if (value !== LOTTERY_PASSWORD) {
+      window.alert('密码错误，暂时不能打开抽奖页面。')
+      return
+    }
+
+    unlockLottery()
+    const lotteryWindow = window.open('/lottery', 'wedding-lottery', 'popup,width=1400,height=900')
+    if (!lotteryWindow) {
+      window.alert('浏览器拦截了新窗口，请允许弹窗后再试。')
     }
   }
 
@@ -607,11 +818,30 @@ function App() {
               ))}
             </div>
             <div className="footer-initials">{w.initials}</div>
+            <button type="button" className="lottery-entry" onClick={handleLotteryEntryClick}>
+              <span className="lottery-entry-ball" />
+              <span>
+                <strong>现场幸运抽奖</strong>
+                <small>Wedding Live Draw</small>
+              </span>
+            </button>
           </footer>
         </div>
       )}
     </div>
   )
+}
+
+function App() {
+  const location = useLocation()
+  const isLottery = location.pathname === '/lottery' || location.pathname === '/lottery/'
+  const isJp = location.pathname === '/jp' || location.pathname === '/jp/'
+
+  if (isLottery) {
+    return <LotteryPage />
+  }
+
+  return <InvitationPage isJp={isJp} />
 }
 
 export default App
